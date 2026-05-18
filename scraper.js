@@ -1,12 +1,13 @@
 const gplay = require('google-play-scraper');
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY,
   {
     realtime: {
-      enabled: false
+      transport: WebSocket
     }
   }
 );
@@ -32,7 +33,7 @@ async function run() {
     rank: index + 1
   }));
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('apps')
     .insert(cleaned);
 
