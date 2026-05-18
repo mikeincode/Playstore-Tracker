@@ -21,7 +21,21 @@ async function run() {
 
   for (const [index, app] of apps.entries()) {
 
-    // STATIC APP INFO
+    const currentRank = index + 1;
+
+    // GET EXISTING APP
+    const { data: existingApp } = await supabase
+      .from('apps')
+      .select('rank')
+      .eq('app_id', app.appId)
+      .single();
+
+    const previousRank = existingApp?.rank || currentRank;
+
+    // TREND SCORE
+    const trendScore = previousRank - currentRank;
+
+    // UPSERT APP
     const appData = {
       app_id: app.appId,
       title: app.title,
@@ -33,10 +47,11 @@ async function run() {
       url: app.url,
       icon: app.icon,
       summary: app.summary,
-      rank: index + 1
+      previous_rank: previousRank,
+      rank: currentRank,
+      trend_score: trendScore
     };
 
-    // UPSERT INTO APPS TABLE
     const { error: appError } = await supabase
       .from('apps')
       .upsert(appData, {
@@ -47,10 +62,10 @@ async function run() {
       console.log(appError);
     }
 
-    // INSERT SNAPSHOT
+    // SNAPSHOT INSERT
     const snapshotData = {
       app_id: app.appId,
-      rank: index + 1,
+      rank: currentRank,
       score: app.score,
       installs: app.installs
     };
@@ -64,7 +79,7 @@ async function run() {
     }
   }
 
-  console.log('Scrape complete!');
+  console.log('Trend scrape complete!');
 }
 
 run();
