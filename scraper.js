@@ -164,35 +164,4 @@ async function scrapeApps() {
   }
 }
 
-scrapeApps();        await supabase
-          .from("app_snapshots")
-          .insert({
-            app_id: app.appId,
-            rank: i + 1,
-            score: app.score || 0,
-            installs:
-              app.installs ||
-              app.realInstalls ||
-              "0+",
-            category:
-              app.genre ||
-              "Unknown",
-            snapshot_date: snapshotDate,
-          });
-
-      if (snapError) {
-        console.error(snapError);
-      }
-    }
-
-    console.log("Scrape complete!");
-
-  } catch (err) {
-
-    console.error(err);
-    process.exit(1);
-
-  }
-}
-
 scrapeApps();
