@@ -19,7 +19,7 @@ async function scrapeApps() {
     console.log("Starting scrape...");
 
     const apps = await gplay.list({
-      collection: gplay.collection.TOP_FREE_APPS,
+      collection: "TOP_FREE",
       num: 50,
       country: "us",
     });
@@ -119,7 +119,7 @@ async function scrapeApps() {
 
       }
 
-      // INSERT SNAPSHOT
+      // INSERT SNAPSHOT TABLE
       const { error: snapshotError } =
         await supabase
           .from("app_snapshots")
