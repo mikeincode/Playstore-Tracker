@@ -12,74 +12,145 @@ const supabase = createClient(
   }
 );
 
-async function run() {
+// COLLECTIONS TO TRACK
+const collections = [
+  {
+    name: 'TOP_FREE',
+    collection: gplay.collection.TOP_FREE
+  },
+  {
+    name: 'TOP_GROSSING',
+    collection: gplay.collection.TOP_GROSSING
+  }
+];
 
-  const apps = await gplay.list({
-    collection: gplay.collection.TOP_FREE,
-    num: 50
-  });
+// CATEGORIES TO TRACK
+const categories = [
+  {
+    name: 'PRODUCTIVITY',
+    category: gplay.category.PRODUCTIVITY
+  },
+  {
+    name: 'FINANCE',
+    category: gplay.category.FINANCE
+  },
+  {
+    name: 'EDUCATION',
+    category: gplay.category.EDUCATION
+  },
+  {
+    name: 'TOOLS',
+    category: gplay.category.TOOLS
+  },
+  {
+    name: 'BUSINESS',
+    category: gplay.category.BUSINESS
+  },
+  {
+    name: 'LIFESTYLE',
+    category: gplay.category.LIFESTYLE
+  }
+];
 
-  for (const [index, app] of apps.entries()) {
+async function scrapeCollection(collectionObj, categoryObj = null) {
 
-    const currentRank = index + 1;
+  try {
 
-    // GET EXISTING APP
-    const { data: existingApp } = await supabase
-      .from('apps')
-      .select('rank')
-      .eq('app_id', app.appId)
-      .single();
+    const apps = await gplay.list({
+      collection: collectionObj.collection,
+      category: categoryObj?.category,
+      num: 50
+    });
 
-    const previousRank = existingApp?.rank || currentRank;
+    console.log(
+      `Scraping ${collectionObj.name} ${categoryObj?.name || 'ALL'}`
+    );
 
-    // TREND SCORE
-    const trendScore = previousRank - currentRank;
+    for (const [index, app] of apps.entries()) {
 
-    // UPSERT APP
-    const appData = {
-      app_id: app.appId,
-      title: app.title,
-      developer: app.developer,
-      category: app.genre,
-      score: app.score,
-      installs: app.installs,
-      free: app.free,
-      url: app.url,
-      icon: app.icon,
-      summary: app.summary,
-      previous_rank: previousRank,
-      rank: currentRank,
-      trend_score: trendScore
-    };
+      const currentRank = index + 1;
 
-    const { error: appError } = await supabase
-      .from('apps')
-      .upsert(appData, {
-        onConflict: 'app_id'
-      });
+      // GET EXISTING APP
+      const { data: existingApp } = await supabase
+        .from('apps')
+        .select('rank')
+        .eq('app_id', app.appId)
+        .single();
 
-    if (appError) {
-      console.log(appError);
+      const previousRank = existingApp?.rank || currentRank;
+
+      // TREND SCORE
+      const trendScore = previousRank - currentRank;
+
+      // UPSERT MAIN APP
+      const appData = {
+        app_id: app.appId,
+        title: app.title,
+        developer: app.developer,
+        category: app.genre,
+        score: app.score,
+        installs: app.installs,
+        free: app.free,
+        url: app.url,
+        icon: app.icon,
+        summary: app.summary,
+        previous_rank: previousRank,
+        rank: currentRank,
+        trend_score: trendScore
+      };
+
+      const { error: appError } = await supabase
+        .from('apps')
+        .upsert(appData, {
+          onConflict: 'app_id'
+        });
+
+      if (appError) {
+        console.log(appError);
+      }
+
+      // SNAPSHOT HISTORY
+      const snapshotData = {
+        app_id: app.appId,
+        rank: currentRank,
+        score: app.score,
+        installs: app.installs,
+        collection: collectionObj.name,
+        category: categoryObj?.name || app.genre
+      };
+
+      const { error: snapshotError } = await supabase
+        .from('app_snapshots')
+        .insert(snapshotData);
+
+      if (snapshotError) {
+        console.log(snapshotError);
+      }
     }
 
-    // SNAPSHOT INSERT
-    const snapshotData = {
-      app_id: app.appId,
-      rank: currentRank,
-      score: app.score,
-      installs: app.installs
-    };
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-    const { error: snapshotError } = await supabase
-      .from('app_snapshots')
-      .insert(snapshotData);
+async function run() {
 
-    if (snapshotError) {
-      console.log(snapshotError);
+  // GLOBAL COLLECTIONS
+  for (const collection of collections) {
+    await scrapeCollection(collection);
+  }
+
+  // CATEGORY COLLECTIONS
+  for (const collection of collections) {
+
+    for (const category of categories) {
+
+      await scrapeCollection(collection, category);
+
     }
   }
 
-  console.log('Trend scrape complete!');
+  console.log('Multi-category trend scrape complete!');
 }
 
 run();
