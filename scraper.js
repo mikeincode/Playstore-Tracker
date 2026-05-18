@@ -31,10 +31,13 @@ async function scrapeApps() {
 
     for (let i = 0; i < apps.length; i++) {
 
-      const app = apps[i];
+      const basicApp = apps[i];
 
-console.log(app);
-break;
+const app = await gplay.app({
+  appId: basicApp.appId,
+});
+
+
 
       // GET PREVIOUS RANK
       const { data: existing } =
