@@ -1,12 +1,13 @@
 const gplay = require("google-play-scraper");
 const { createClient } = require("@supabase/supabase-js");
+const WebSocket = require("ws");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY,
   {
     realtime: {
-      disabled: true,
+      transport: WebSocket,
     },
   }
 );
@@ -27,58 +28,107 @@ async function scrapeApps() {
     const snapshotDate = new Date().toISOString();
 
     for (let i = 0; i < apps.length; i++) {
+
       const app = apps[i];
 
       const appData = {
         app_id: app.appId || null,
-        title: app.title || null,
-        developer: app.developer || null,
-        summary: app.summary || null,
-        score: app.score || null,
-        installs: app.installs || null,
-        free: app.free || false,
-        category: app.genre || null,
-        icon: app.icon || null,
-        url: app.url || null,
+        title: app.title || "Unknown",
+        developer: app.developer || "Unknown",
+
+        category:
+          app.genre ||
+          app.category ||
+          "Unknown",
+
+        score: app.score || 0,
+
+        installs:
+          app.installs ||
+          app.realInstalls ||
+          "0+",
+
+        free: app.free ?? true,
+
+        icon:
+          app.icon ||
+          app.headerImage ||
+          "",
+
+        url: app.url || "",
+
+        summary:
+          app.summary ||
+          "",
+
         rank: i + 1,
-        created_at: snapshotDate,
       };
 
-      console.log(`Saving ${appData.title}`);
+      console.log(
+        `Saving ${appData.title}`
+      );
 
-      // Save/update master apps table
-      const { error: appError } = await supabase
-        .from("apps")
-        .upsert(appData, {
-          onConflict: "app_id",
-        });
+      // GET OLD RANK
+      const { data: existing } =
+        await supabase
+          .from("apps")
+          .select("rank")
+          .eq("app_id", app.appId)
+          .single();
+
+      const previousRank =
+        existing?.rank || i + 1;
+
+      const trendScore =
+        previousRank - (i + 1);
+
+      // UPSERT MAIN TABLE
+      const { error: appError } =
+        await supabase
+          .from("apps")
+          .upsert({
+            ...appData,
+            previous_rank: previousRank,
+            trend_score: trendScore,
+            snapshot_date: snapshotDate,
+          }, {
+            onConflict: "app_id",
+          });
 
       if (appError) {
-        console.error("Apps table error:", appError);
+        console.error(appError);
       }
 
-      // Save snapshot history
-      const { error: snapshotError } = await supabase
-        .from("app_snapshots")
-        .insert({
-          app_id: appData.app_id,
-          rank: appData.rank,
-          score: appData.score,
-          installs: appData.installs,
-          category: appData.category,
-          snapshot_date: snapshotDate,
-        });
+      // INSERT SNAPSHOT
+      const { error: snapError } =
+        await supabase
+          .from("app_snapshots")
+          .insert({
+            app_id: app.appId,
+            rank: i + 1,
+            score: app.score || 0,
+            installs:
+              app.installs ||
+              app.realInstalls ||
+              "0+",
+            category:
+              app.genre ||
+              "Unknown",
+            snapshot_date: snapshotDate,
+          });
 
-      if (snapshotError) {
-        console.error("Snapshot error:", snapshotError);
+      if (snapError) {
+        console.error(snapError);
       }
     }
 
-    console.log("Scrape completed successfully");
+    console.log("Scrape complete!");
+
   } catch (err) {
-    console.error("SCRAPER FAILED:");
+
     console.error(err);
     process.exit(1);
+
   }
 }
 
