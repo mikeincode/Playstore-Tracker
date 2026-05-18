@@ -13,29 +13,33 @@ const supabase = createClient(
 );
 
 async function scrapeApps() {
+
   try {
+
     console.log("Starting scrape...");
 
     const apps = await gplay.list({
-      collection: gplay.collection.TOP_FREE,
+      collection: gplay.collection.TOP_FREE_APPS,
       num: 50,
       country: "us",
     });
 
     console.log(`Found ${apps.length} apps`);
 
-    const snapshotDate = new Date().toISOString();
+    const snapshotDate =
+      new Date().toISOString();
 
     for (let i = 0; i < apps.length; i++) {
 
       const app = apps[i];
 
       // GET PREVIOUS RANK
-      const { data: existing } = await supabase
-        .from("apps")
-        .select("rank")
-        .eq("app_id", app.appId)
-        .single();
+      const { data: existing } =
+        await supabase
+          .from("apps")
+          .select("rank")
+          .eq("app_id", app.appId)
+          .single();
 
       const previousRank =
         existing?.rank || i + 1;
@@ -44,7 +48,9 @@ async function scrapeApps() {
         previousRank - (i + 1);
 
       const appData = {
-        app_id: app.appId || null,
+
+        app_id:
+          app.appId || null,
 
         title:
           app.title || "Unknown",
@@ -96,7 +102,7 @@ async function scrapeApps() {
         `Saving ${appData.title}`
       );
 
-      // UPSERT MAIN APPS TABLE
+      // UPSERT APPS TABLE
       const { error: appError } =
         await supabase
           .from("apps")
@@ -105,17 +111,20 @@ async function scrapeApps() {
           });
 
       if (appError) {
+
         console.error(
           "Apps table error:",
           appError
         );
+
       }
 
-      // INSERT SNAPSHOT TABLE
+      // INSERT SNAPSHOT
       const { error: snapshotError } =
         await supabase
           .from("app_snapshots")
           .insert({
+
             app_id:
               appData.app_id,
 
@@ -136,10 +145,12 @@ async function scrapeApps() {
           });
 
       if (snapshotError) {
+
         console.error(
           "Snapshot error:",
           snapshotError
         );
+
       }
 
       // SMALL DELAY
