@@ -62,15 +62,20 @@ async function scrapeApps() {
   app.genre ||
   app.genreId ||
   app.categories?.[0]?.name ||
+  app.categories?.[0] ||
   "Other",
-
-score:
-  Number(app.score || app.ratings || 0),
 
 installs:
   app.installs ||
-  app.realInstalls?.toLocaleString() + "+" ||
-  app.minInstalls?.toLocaleString() + "+" ||
+  (app.realInstalls
+    ? app.realInstalls.toLocaleString() + "+"
+    : null) ||
+  (app.minInstalls
+    ? app.minInstalls.toLocaleString() + "+"
+    : null) ||
+  (app.maxInstalls
+    ? app.maxInstalls.toLocaleString() + "+"
+    : null) ||
   "Unknown",
 
         free:
