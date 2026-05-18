@@ -1,0 +1,12 @@
+{
+  "name": "playstore-tracker",
+  "version": "1.0.0",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.7",
+    "google-play-scraper": "^9.1.1"
+  }
+}
