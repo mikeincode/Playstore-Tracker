@@ -33,6 +33,9 @@ async function scrapeApps() {
 
       const app = apps[i];
 
+console.log(app);
+break;
+
       // GET PREVIOUS RANK
       const { data: existing } =
         await supabase
