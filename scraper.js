@@ -3,7 +3,12 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.SUPABASE_KEY,
+  {
+    realtime: {
+      disabled: true,
+    },
+  }
 );
 
 const today = new Date().toISOString().split('T')[0];
@@ -146,7 +151,7 @@ async function run() {
           );
         }
 
-        // INSERT SNAPSHOT
+        // INSERT SNAPSHOT TABLE
         const { error: snapshotError } =
           await supabase
             .from('app_snapshots')
