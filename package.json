@@ -1,13 +1,14 @@
 {
   "name": "playstore-tracker",
   "version": "1.0.0",
+  "description": "Google Play Store trend scraper",
   "main": "scraper.js",
   "scripts": {
     "start": "node scraper.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.7",
-    "google-play-scraper": "^9.1.1",
+    "@supabase/supabase-js": "^2.49.8",
+    "google-play-scraper": "^10.1.2",
     "ws": "^8.18.0"
   }
 }
