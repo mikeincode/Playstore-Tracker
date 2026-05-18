@@ -59,17 +59,19 @@ async function scrapeApps() {
           app.developer || "Unknown",
 
         category:
-          app.genre ||
-          app.category ||
-          "Unknown",
+  app.genre ||
+  app.genreId ||
+  app.categories?.[0]?.name ||
+  "Other",
 
-        score:
-          app.score || 0,
+score:
+  Number(app.score || app.ratings || 0),
 
-        installs:
-          app.installs ||
-          app.realInstalls ||
-          "0+",
+installs:
+  app.installs ||
+  app.realInstalls?.toLocaleString() + "+" ||
+  app.minInstalls?.toLocaleString() + "+" ||
+  "Unknown",
 
         free:
           app.free ?? true,
