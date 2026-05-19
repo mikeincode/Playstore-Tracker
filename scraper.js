@@ -295,16 +295,16 @@ for (const collection of collections) {
           app.url || "",
 
         summary:
-          app.summary ||
-          app.description ||
-          "",
+  app.summary ||
+  app.description ||
+  "",
 
-        updated:
-          app.updated
-            ? new Date(
-                app.updated
-              ).toISOString()
-            : null,
+collection_type:
+  basicApp.collection_type || null,
+
+updated: app.updated
+  ? new Date(app.updated).toISOString()
+  : null,
 
         released:
           app.released || null,
@@ -410,16 +410,19 @@ for (const collection of collections) {
               appData.title,
 
             category:
-              appData.category,
+  appData.category,
 
-            installs:
-              appData.installs,
+collection_type:
+  appData.collection_type,
 
-            score:
-              appData.score,
+installs:
+  appData.installs,
 
-            ratings:
-              appData.ratings,
+score:
+  appData.score,
+
+ratings:
+  appData.ratings,
 
             reviews:
               appData.reviews,
