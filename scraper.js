@@ -18,10 +18,10 @@ async function scrapeApps() {
     console.log("Starting scrape...");
 
     const apps = await gplay.list({
-      collection: gplay.collection.TOP_FREE,
-      num: 50,
-      country: "us",
-    });
+  collection: "TOP_FREE",
+  num: 50,
+  country: "us",
+});
 
     console.log(`Found ${apps.length} apps`);
 
