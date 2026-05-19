@@ -21,8 +21,8 @@ async function scrapeApps() {
   "TOP_FREE",
   "GROSSING",
   "TOP_PAID",
-  "NEW_FREE",
-  "NEW_PAID",
+  "NEW_FREE_APPLICATIONS",
+  "NEW_PAID_APPLICATIONS",
 ];
 
 let allApps = [];
