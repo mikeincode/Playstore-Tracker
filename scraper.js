@@ -37,8 +37,11 @@ async function scrapeApps() {
 
       // GET FULL APP DETAILS
       const app = await gplay.app({
-        appId: basicApp.appId,
-      });
+  appId: basicApp.appId,
+});
+
+console.log(app);
+break;
 
       console.log(
         `Fetching ${app.title}`
