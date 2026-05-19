@@ -1,4 +1,4 @@
-const gplay = require("google-play-scraper");
+const gplay = require("google-play-scraper").default;
 const { createClient } = require("@supabase/supabase-js");
 const WebSocket = require("ws");
 
