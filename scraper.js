@@ -84,6 +84,29 @@ async function scrapeApps() {
           app.score || 0,
 
         ratings:
+  app.ratings || 0,
+
+reviews:
+  app.reviews || 0,
+
+updated:
+  app.updated || null,
+
+released:
+  app.released || null,
+
+version:
+  app.version || null,
+
+content_rating:
+  app.contentRating || null,
+
+size:
+  app.size || null,
+
+developer_website:
+  app.developerWebsite || null,
+        ratings:
           app.ratings || 0,
 
         reviews:
@@ -143,8 +166,10 @@ async function scrapeApps() {
           app.summary || "",
 
         description:
-          app.description || "",
+  app.description || "",
 
+screenshots:
+  app.screenshots || [],
         // RANKING
         rank:
           i + 1,
@@ -154,7 +179,7 @@ async function scrapeApps() {
 
         trend_score:
           trendScore,
-
+        
         momentum_score:
           trendScore * (app.score || 1),
 
