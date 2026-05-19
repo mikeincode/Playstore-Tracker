@@ -17,11 +17,35 @@ async function scrapeApps() {
 
     console.log("Starting scrape...");
 
-    const apps = await gplay.list({
-  collection: "TOP_FREE",
-  num: 200,
-  country: "us",
-});
+    const collections = [
+  "TOP_FREE",
+  "TOP_GROSSING",
+  "TOP_PAID",
+  "NEW_FREE",
+  "NEW_PAID",
+];
+
+let allApps = [];
+
+for (const collection of collections) {
+
+  console.log(
+    `Scraping collection: ${collection}`
+  );
+
+  const apps = await gplay.list({
+    collection,
+    num: 200,
+    country: "us",
+  });
+
+  const taggedApps = apps.map(app => ({
+    ...app,
+    collection_type: collection,
+  }));
+
+  allApps.push(...taggedApps);
+}
 
     console.log(`Found ${apps.length} apps`);
 
