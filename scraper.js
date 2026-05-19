@@ -13,12 +13,9 @@ const supabase = createClient(
 );
 
 async function scrapeApps() {
-
   try {
-
     console.log("Starting scrape...");
 
-    // GET TOP FREE APPS
     const apps = await gplay.list({
       collection: "TOP_FREE",
       num: 50,
@@ -27,50 +24,42 @@ async function scrapeApps() {
 
     console.log(`Found ${apps.length} apps`);
 
-    const snapshotDate =
-      new Date().toISOString();
+    const snapshotDate = new Date().toISOString();
 
-    // LOOP THROUGH APPS
     for (let i = 0; i < apps.length; i++) {
-
       const basicApp = apps[i];
 
       // GET FULL APP DETAILS
       const app = await gplay.app({
-  appId: basicApp.appId,
-});
+        appId: basicApp.appId,
+      });
 
-      console.log(
-        `Fetching ${app.title}`
-      );
+      console.log(`Processing ${app.title}`);
 
       // GET PREVIOUS RANK
-      const { data: existing } =
-        await supabase
-          .from("apps")
-          .select("rank")
-          .eq("app_id", app.appId)
-          .single();
+      const { data: existing } = await supabase
+        .from("apps")
+        .select("rank")
+        .eq("app_id", app.appId)
+        .single();
 
-      const previousRank =
-        existing?.rank || i + 1;
+      const previousRank = existing?.rank || i + 1;
 
-      // TREND SCORE
-      const trendScore =
-        previousRank - (i + 1);
+      const trendScore = previousRank - (i + 1);
 
-      // APP DATA OBJECT
+      // MOMENTUM SCORE
+      const momentumScore =
+        trendScore * 10 +
+        (app.score || 0) * 5 +
+        ((app.ratings || 0) / 1000000);
+
+      // MAIN APP DATA
       const appData = {
+        app_id: app.appId || null,
 
-        // BASIC INFO
-        app_id:
-          app.appId || null,
+        title: app.title || "Unknown",
 
-        title:
-          app.title || "Unknown",
-
-        developer:
-          app.developer || "Unknown",
+        developer: app.developer || "Unknown",
 
         category:
           app.genre ||
@@ -79,40 +68,12 @@ async function scrapeApps() {
           app.categories?.[0] ||
           "Other",
 
-        // RATINGS
-        score:
-          app.score || 0,
+        score: app.score || 0,
 
-        ratings:
-  app.ratings || 0,
+        ratings: app.ratings || 0,
 
-reviews:
-  app.reviews || 0,
+        reviews: app.reviews || 0,
 
-updated:
-  app.updated || null,
-
-released:
-  app.released || null,
-
-version:
-  app.version || null,
-
-content_rating:
-  app.contentRating || null,
-
-size:
-  app.size || null,
-
-developer_website:
-  app.developerWebsite || null,
-        ratings:
-          app.ratings || 0,
-
-        reviews:
-          app.reviews || 0,
-
-        // INSTALLS
         installs:
           app.installs ||
           (app.realInstalls
@@ -126,73 +87,50 @@ developer_website:
             : null) ||
           "Unknown",
 
-        // APP DETAILS
-        free:
-          app.free ?? true,
+        free: app.free ?? true,
 
-        version:
-          app.version || null,
-
-        size:
-          app.size || null,
-
-        updated:
-          app.updated || null,
-
-        released:
-          app.released || null,
-
-        content_rating:
-          app.contentRating || null,
-
-        developer_website:
-          app.developerWebsite || null,
-
-        // MEDIA
         icon:
           app.icon ||
           app.headerImage ||
           "",
 
-        screenshots:
-          app.screenshots || [],
+        url: app.url || "",
 
-        // LINKS
-        url:
-          app.url || "",
-
-        // TEXT
         summary:
-          app.summary || "",
+          app.summary ||
+          app.description ||
+          "",
 
-        description:
-  app.description || "",
+        updated: app.updated
+          ? new Date(app.updated).toISOString()
+          : null,
 
-screenshots:
-  app.screenshots || [],
-        // RANKING
-        rank:
-          i + 1,
+        released: app.released || null,
 
-        previous_rank:
-          previousRank,
+        version: app.version || null,
 
-        trend_score:
-          trendScore,
-        
-        momentum_score:
-          trendScore * (app.score || 1),
+        content_rating:
+          app.contentRating || null,
 
-        // SNAPSHOT DATE
-        snapshot_date:
-          snapshotDate,
+        size: app.size || null,
+
+        developer_website:
+          app.developerWebsite || null,
+
+        rank: i + 1,
+
+        previous_rank: previousRank,
+
+        trend_score: trendScore,
+
+        momentum_score: momentumScore,
+
+        snapshot_date: snapshotDate,
       };
 
-      console.log(
-        `Saving ${appData.title}`
-      );
+      console.log(`Saving ${appData.title}`);
 
-      // UPSERT MAIN APPS TABLE
+      // UPSERT APPS TABLE
       const { error: appError } =
         await supabase
           .from("apps")
@@ -201,34 +139,31 @@ screenshots:
           });
 
       if (appError) {
-
         console.error(
-          "Apps table error:",
-          appError
+          "Apps table error:"
         );
 
+        console.error(appError);
       }
 
-      // INSERT SNAPSHOT HISTORY
+      // INSERT SNAPSHOT
       const { error: snapshotError } =
         await supabase
           .from("app_snapshots")
           .insert({
+            app_id: appData.app_id,
 
-            app_id:
-              appData.app_id,
+            rank: appData.rank,
 
-            title:
-              appData.title,
+            score: appData.score,
 
-            category:
-              appData.category,
+            installs: appData.installs,
 
-            rank:
-              appData.rank,
+            category: appData.category,
 
-            previous_rank:
-              appData.previous_rank,
+            ratings: appData.ratings,
+
+            reviews: appData.reviews,
 
             trend_score:
               appData.trend_score,
@@ -236,49 +171,28 @@ screenshots:
             momentum_score:
               appData.momentum_score,
 
-            score:
-              appData.score,
-
-            ratings:
-              appData.ratings,
-
-            reviews:
-              appData.reviews,
-
-            installs:
-              appData.installs,
-
             snapshot_date:
               snapshotDate,
           });
 
       if (snapshotError) {
-
         console.error(
-          "Snapshot error:",
-          snapshotError
+          "Snapshot error:"
         );
 
+        console.error(snapshotError);
       }
 
       // SMALL DELAY
       await new Promise((resolve) =>
-        setTimeout(resolve, 250)
+        setTimeout(resolve, 400)
       );
     }
 
-    console.log(
-      "Scrape complete!"
-    );
-
+    console.log("Scrape complete!");
   } catch (err) {
-
-    console.error(
-      "SCRAPER FAILED:"
-    );
-
+    console.error("SCRAPER FAILED:");
     console.error(err);
-
     process.exit(1);
   }
 }
