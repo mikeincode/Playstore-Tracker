@@ -45,7 +45,102 @@ async function scrapeApps() {
 
       const previousRank = existing?.rank || i + 1;
 
-      const trendScore = previousRank - (i + 1);
+      const currentRank = i + 1;
+
+const trendScore =
+  previousRank - currentRank;
+
+const growthVelocity =
+  trendScore > 0
+    ? trendScore * 2
+    : 0;
+
+const decayVelocity =
+  trendScore < 0
+    ? Math.abs(trendScore) * 2
+    : 0;
+
+const neglectedScore =
+  (
+    currentRank > 50 ? 25 : 0
+  ) +
+  (
+    app.score < 3.5 ? 20 : 0
+  ) +
+  (
+    app.ratings > 100000
+      ? 15
+      : 0
+  );
+
+const frustrationScore =
+  (
+    app.score < 2.5 ? 40 : 0
+  ) +
+  (
+    app.reviews > 5000 ? 20 : 0
+  ) +
+  (
+    app.ratings > 100000
+      ? 20
+      : 0
+  );
+
+const monetizationGap =
+  (
+    app.minInstalls > 1000000
+      ? 30
+      : 0
+  ) +
+  (
+    app.score < 3.8 ? 20 : 0
+  ) +
+  (
+    app.offersIAP ? 10 : 0
+  );
+
+const cloneScore =
+  (
+    app.minInstalls > 5000000
+      ? 35
+      : 0
+  ) +
+  (
+    app.score < 4.0 ? 20 : 0
+  ) +
+  (
+    currentRank <= 25 ? 15 : 0
+  );
+
+const saturationScore =
+  (
+    currentRank <= 10 ? 30 : 0
+  ) +
+  (
+    app.ratings > 1000000
+      ? 25
+      : 0
+  );
+
+const opportunityScore =
+  growthVelocity +
+  neglectedScore +
+  frustrationScore +
+  monetizationGap +
+  cloneScore -
+  saturationScore;
+
+let trendLabel = "Stable";
+
+if (trendScore >= 15) {
+  trendLabel = "Exploding";
+} else if (trendScore >= 5) {
+  trendLabel = "Rising";
+} else if (trendScore <= -15) {
+  trendLabel = "Crashing";
+} else if (trendScore <= -5) {
+  trendLabel = "Declining";
+}
 
       // MOMENTUM SCORE
       const momentumScore =
@@ -123,6 +218,24 @@ async function scrapeApps() {
 
         trend_score: trendScore,
 
+        growth_velocity: growthVelocity,
+
+        decay_velocity: decayVelocity,
+
+        neglected_score: neglectedScore,
+
+        frustration_score: frustrationScore,
+
+        monetization_gap: monetizationGap,
+
+       clone_score: cloneScore,
+
+       saturation_score: saturationScore,
+
+      opportunity_score: opportunityScore,
+
+      trend_label: trendLabel,
+        
         momentum_score: momentumScore,
 
         snapshot_date: snapshotDate,
