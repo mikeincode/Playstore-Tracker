@@ -18,6 +18,7 @@ async function scrapeApps() {
 
     console.log("Starting scrape...");
 
+    // GET TOP FREE APPS
     const apps = await gplay.list({
       collection: "TOP_FREE",
       num: 50,
@@ -29,15 +30,19 @@ async function scrapeApps() {
     const snapshotDate =
       new Date().toISOString();
 
+    // LOOP THROUGH APPS
     for (let i = 0; i < apps.length; i++) {
 
       const basicApp = apps[i];
 
-const app = await gplay.app({
-  appId: basicApp.appId,
-});
+      // GET FULL APP DETAILS
+      const app = await gplay.app({
+        appId: basicApp.appId,
+      });
 
-
+      console.log(
+        `Fetching ${app.title}`
+      );
 
       // GET PREVIOUS RANK
       const { data: existing } =
@@ -50,11 +55,14 @@ const app = await gplay.app({
       const previousRank =
         existing?.rank || i + 1;
 
+      // TREND SCORE
       const trendScore =
         previousRank - (i + 1);
 
+      // APP DATA OBJECT
       const appData = {
 
+        // BASIC INFO
         app_id:
           app.appId || null,
 
@@ -65,39 +73,79 @@ const app = await gplay.app({
           app.developer || "Unknown",
 
         category:
-  app.genre ||
-  app.genreId ||
-  app.categories?.[0]?.name ||
-  app.categories?.[0] ||
-  "Other",
+          app.genre ||
+          app.genreId ||
+          app.categories?.[0]?.name ||
+          app.categories?.[0] ||
+          "Other",
 
-installs:
-  app.installs ||
-  (app.realInstalls
-    ? app.realInstalls.toLocaleString() + "+"
-    : null) ||
-  (app.minInstalls
-    ? app.minInstalls.toLocaleString() + "+"
-    : null) ||
-  (app.maxInstalls
-    ? app.maxInstalls.toLocaleString() + "+"
-    : null) ||
-  "Unknown",
+        // RATINGS
+        score:
+          app.score || 0,
 
+        ratings:
+          app.ratings || 0,
+
+        reviews:
+          app.reviews || 0,
+
+        // INSTALLS
+        installs:
+          app.installs ||
+          (app.realInstalls
+            ? app.realInstalls.toLocaleString() + "+"
+            : null) ||
+          (app.minInstalls
+            ? app.minInstalls.toLocaleString() + "+"
+            : null) ||
+          (app.maxInstalls
+            ? app.maxInstalls.toLocaleString() + "+"
+            : null) ||
+          "Unknown",
+
+        // APP DETAILS
         free:
           app.free ?? true,
 
+        version:
+          app.version || null,
+
+        size:
+          app.size || null,
+
+        updated:
+          app.updated || null,
+
+        released:
+          app.released || null,
+
+        content_rating:
+          app.contentRating || null,
+
+        developer_website:
+          app.developerWebsite || null,
+
+        // MEDIA
         icon:
           app.icon ||
           app.headerImage ||
           "",
 
+        screenshots:
+          app.screenshots || [],
+
+        // LINKS
         url:
           app.url || "",
 
+        // TEXT
         summary:
           app.summary || "",
 
+        description:
+          app.description || "",
+
+        // RANKING
         rank:
           i + 1,
 
@@ -107,6 +155,10 @@ installs:
         trend_score:
           trendScore,
 
+        momentum_score:
+          trendScore * (app.score || 1),
+
+        // SNAPSHOT DATE
         snapshot_date:
           snapshotDate,
       };
@@ -115,7 +167,7 @@ installs:
         `Saving ${appData.title}`
       );
 
-      // UPSERT APPS TABLE
+      // UPSERT MAIN APPS TABLE
       const { error: appError } =
         await supabase
           .from("apps")
@@ -132,7 +184,7 @@ installs:
 
       }
 
-      // INSERT SNAPSHOT TABLE
+      // INSERT SNAPSHOT HISTORY
       const { error: snapshotError } =
         await supabase
           .from("app_snapshots")
@@ -141,17 +193,35 @@ installs:
             app_id:
               appData.app_id,
 
+            title:
+              appData.title,
+
+            category:
+              appData.category,
+
             rank:
               appData.rank,
+
+            previous_rank:
+              appData.previous_rank,
+
+            trend_score:
+              appData.trend_score,
+
+            momentum_score:
+              appData.momentum_score,
 
             score:
               appData.score,
 
+            ratings:
+              appData.ratings,
+
+            reviews:
+              appData.reviews,
+
             installs:
               appData.installs,
-
-            category:
-              appData.category,
 
             snapshot_date:
               snapshotDate,
