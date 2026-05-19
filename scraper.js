@@ -19,7 +19,7 @@ async function scrapeApps() {
 
     const collections = [
   "TOP_FREE",
-  "TOP_GROSSING",
+  "GROSSING",
   "TOP_PAID",
   "NEW_FREE",
   "NEW_PAID",
