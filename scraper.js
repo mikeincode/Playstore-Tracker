@@ -45,7 +45,7 @@ for (const collection of collections) {
   allApps.push(...taggedApps);
 }
 
-    console.log(`Found ${apps.length} apps`);
+    console.log(`Found ${allApps.length} apps`);
 
     const snapshotDate =
       new Date().toISOString();
