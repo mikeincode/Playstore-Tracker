@@ -19,7 +19,7 @@ async function scrapeApps() {
 
     const apps = await gplay.list({
   collection: "TOP_FREE",
-  num: 50,
+  num: 200,
   country: "us",
 });
 
