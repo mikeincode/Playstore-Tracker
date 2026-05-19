@@ -52,9 +52,9 @@ for (const collection of collections) {
     const snapshotDate =
       new Date().toISOString();
 
-    for (let i = 0; i < apps.length; i++) {
+    for (let i = 0; i < allApps.length; i++) {
 
-      const basicApp = apps[i];
+      const basicApp = allApps[i];
 
       // FULL APP DETAILS
       const app = await gplay.app({
