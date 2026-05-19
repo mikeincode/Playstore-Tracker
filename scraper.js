@@ -40,9 +40,6 @@ async function scrapeApps() {
   appId: basicApp.appId,
 });
 
-console.log(app);
-break;
-
       console.log(
         `Fetching ${app.title}`
       );
